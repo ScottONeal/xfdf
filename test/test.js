@@ -1,11 +1,30 @@
 var should = require('should'),
-    XFDF   = require('../index.js');
+    XFDF   = require('../index.js'),
+    xml2js = require('xml2js');
 
 describe('xfdf instantiation', function() {
   var xfdf = new XFDF();
 
   it('should be an instance of object', function() {
     xfdf.should.be.an.instanceOf(Object);
+  });
+
+  it('should set default options', function() {
+    xfdf._opts.format.pretty.should.be.ok;
+    xfdf._opts.format.indent.should.equal('  ');
+    xfdf._opts.format.newline.should.equal('\n');
+    should(xfdf._opts.pdf).not.exist;
+    xfdf._opts.translateBools.should.be.ok;
+  });
+
+  it('should let you set custom options', function() {
+    var xfdf = new XFDF({format: { pretty: false, indent: '', newline: '\r\n' }, pdf: 'Document.pdf', translateBools: false});
+    console.log(JSON.stringify(xfdf._opts, null, 2));
+    xfdf._opts.format.pretty.should.not.be.ok;
+    xfdf._opts.format.indent.should.equal('');
+    xfdf._opts.format.newline.should.equal('\r\n');
+    xfdf._opts.pdf.should.equal('Document.pdf');
+    xfdf._opts.translateBools.should.not.be.ok;
   });
 
   it('#addField()', function() {
@@ -56,10 +75,20 @@ describe('xfdf', function() {
       (function() {xfdf.addField()}).should.throw(Error);
     });
 
+    it('should throw an error if invalid field argument', function() {
+      (function() {xfdf.addField({nme: 'Bad Key', value: 'Good Key'})}).should.throw(Error);
+    });
+
+    it('should add field to _fields array', function() {
+      xfdf.addField({name: 'name', value: 'John'});
+      xfdf._fields.should.have.length(1);
+    });
+
     it('should forward to #addFields() if argument is an array.', function() {
-      xfdf.addFields([{name: 'name', value: 'John'}, {name: 'lname', value: 'Doe'}]);
+      xfdf.addField([{name: 'name', value: 'John'}, {name: 'lname', value: 'Doe'}]);
       xfdf._fields.should.have.length(2);
     });
+
   });
 
   describe('#addFields()', function() {
@@ -72,6 +101,11 @@ describe('xfdf', function() {
       (function() {xfdf.addFields('test')}).should.throw(Error);
     });
 
+    it('should add multiple fields to _fields array', function() {
+      xfdf.addFields([{name: 'name', value: 'John'}, {name: 'lname', value: 'Doe'}]);
+      xfdf._fields.should.have.length(2);
+    });
+
   });
 
   describe('#validField()', function() {
@@ -80,6 +114,52 @@ describe('xfdf', function() {
     });
     it('should return true if field passed has name and value keys', function() {
       xfdf.validField({name: 'test', value: 'true'}).should.be.ok;
+    });
+  });
+
+
+  describe('#generate() empty test', function() {
+    it('should throw an error if no fields have been added', function() {
+      (function() {xfdf.generate()}).should.throw(Error);
+    });
+  });
+
+  describe('#generate()', function() {
+
+    var generation;
+    var data = [{name: 'fname', value: 'Scott'}, {name: 'lname', value: "O'Neal"}];
+    beforeEach(function() {
+      generation = xfdf.addFields(data).generate();
+    });
+
+    it('should successfully return a parsable xml object', function(done) {
+      var parsed = xml2js.parseString(generation, function(err, result) {
+        should(err).not.exist;
+        result.xfdf.should.have.keys(['$', 'fields']);
+        done();
+      });
+    });
+
+    it('should successfully generate a proper xfdf structured document', function(done) {
+      var parsed = xml2js.parseString(generation, function(err, result) {
+        should(err).not.exist;
+        result.xfdf.should.have.keys(['$', 'fields']);
+        result.xfdf.fields.should.be.an.Array;
+
+        var field = result.xfdf.fields[0];
+        field.should.have.key('field');
+
+        //Loop through different fields
+        for ( var i = 0; i < field.length; i++ ) {
+          field[i].$.should.have.key('name');
+          field[i].should.have.key('value');
+          field[i].value[0].should.equal(data[i].value);
+        }
+
+        console.log(JSON.stringify(result, null, 2));
+        console.log(generation);
+        done();
+      });
     });
   });
 });

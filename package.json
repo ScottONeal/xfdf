@@ -24,7 +24,8 @@
   "homepage": "https://github.com/ScottONeal/xfdf",
   "devDependencies": {
     "mocha": "^2.1.0",
-    "should": "^5.0.0"
+    "should": "^5.0.0",
+    "xml2js": "^0.4.5"
   },
   "dependencies": {
     "xmlbuilder": "^2.5.1"
