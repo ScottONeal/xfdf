@@ -78,10 +78,6 @@ XFDF.prototype.fromFile = function() {
 
 };
 
-XFDF.prototype.validate = function() {
-
-};
-
 // This method is used to validate a field object, it only tests to make sure name and values
 //  exists as keys
 XFDF.prototype.validField = function(field) {
@@ -118,8 +114,17 @@ XFDF.prototype.generate = function() {
     // Create field element with attribute of name
     var currentFieldEle = fieldsEle.ele('field', { name: currentField.name });
 
+    var val = currentField.value;
+
+    // translateBool if set
+    if ( this._opts.translateBools && typeof val === 'boolean' ) {
+
+      // XFDF Translates a true to 'Yes' and a false to 'Off' for checkboxes and radios
+      val = val ? 'Yes' : 'Off';
+    }
+
     // Create value element inside of field element
-    currentFieldEle.ele('value', {}, currentField.value);
+    currentFieldEle.ele('value', {}, val);
   }
 
   return rootEle.end(this._opts.format);

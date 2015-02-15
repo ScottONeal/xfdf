@@ -19,7 +19,6 @@ describe('xfdf instantiation', function() {
 
   it('should let you set custom options', function() {
     var xfdf = new XFDF({format: { pretty: false, indent: '', newline: '\r\n' }, pdf: 'Document.pdf', translateBools: false});
-    console.log(JSON.stringify(xfdf._opts, null, 2));
     xfdf._opts.format.pretty.should.not.be.ok;
     xfdf._opts.format.indent.should.equal('');
     xfdf._opts.format.newline.should.equal('\r\n');
@@ -45,10 +44,6 @@ describe('xfdf instantiation', function() {
 
   it('#fromFile()', function() {
     xfdf.fromFile.should.be.a.Function;
-  });
-
-  it('#validate()', function() {
-    xfdf.validate.should.be.a.Function;
   });
 
   it('#validField()', function() {
@@ -127,7 +122,7 @@ describe('xfdf', function() {
   describe('#generate()', function() {
 
     var generation;
-    var data = [{name: 'fname', value: 'Scott'}, {name: 'lname', value: "O'Neal"}];
+    var data = [{name: 'fname', value: 'Scott'}, {name: 'lname', value: "O'Neal"}, { name: 'MALE', value: true }];
     beforeEach(function() {
       generation = xfdf.addFields(data).generate();
     });
@@ -136,6 +131,7 @@ describe('xfdf', function() {
       var parsed = xml2js.parseString(generation, function(err, result) {
         should(err).not.exist;
         result.xfdf.should.have.keys(['$', 'fields']);
+
         done();
       });
     });
@@ -146,18 +142,21 @@ describe('xfdf', function() {
         result.xfdf.should.have.keys(['$', 'fields']);
         result.xfdf.fields.should.be.an.Array;
 
-        var field = result.xfdf.fields[0];
-        field.should.have.key('field');
+        result.xfdf.fields[0].should.have.key('field');
+        result.xfdf.fields[0].field.should.be.an.Array;
+        var field = result.xfdf.fields[0].field;
 
         //Loop through different fields
         for ( var i = 0; i < field.length; i++ ) {
+          field[i].should.have.keys(['$','value']);
           field[i].$.should.have.key('name');
-          field[i].should.have.key('value');
-          field[i].value[0].should.equal(data[i].value);
-        }
 
-        console.log(JSON.stringify(result, null, 2));
-        console.log(generation);
+          var val = data[i].value;
+          if ( typeof val === 'boolean' ) { val = val ? 'Yes' : 'Off'; }
+          field[i].value[0].should.equal(val);
+        }
+        //console.log(JSON.stringify(result, null, 2));
+        //console.log(generation);
         done();
       });
     });
