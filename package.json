@@ -1,0 +1,29 @@
+{
+  "name": "xfdf",
+  "version": "0.0.1",
+  "description": "A Node.js JSON to XFDF generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/mocha/bin/mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ScottONeal/xfdf.git"
+  },
+  "keywords": [
+    "pdf",
+    "xfdf",
+    "fdf",
+    "adobe"
+  ],
+  "author": "Scott O'Neal",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ScottONeal/xfdf/issues"
+  },
+  "homepage": "https://github.com/ScottONeal/xfdf",
+  "devDependencies": {
+    "mocha": "^2.1.0",
+    "should": "^5.0.0"
+  }
+}
