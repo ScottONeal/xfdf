@@ -1,6 +1,18 @@
 var should = require('should'),
     XFDF   = require('../index.js'),
-    xml2js = require('xml2js');
+    xml2js = require('xml2js'),
+    fs     = require('fs');
+
+// Test data
+var data = [
+  { name: 'First_Name', value: 'John'},
+  { name: 'Last_Name' , value: "Doe"},
+  { name: 'MALE'      , value: true },
+  { name: 'Address_1' , value: '123 Work Street' },
+  { name: 'City'      , value: 'Annapolis' },
+  { name: 'STATE'     , value: 'MD' },
+  { name: 'ZIP'       , value: 27233 }
+];
 
 describe('xfdf instantiation', function() {
   var xfdf = new XFDF();
@@ -42,8 +54,12 @@ describe('xfdf instantiation', function() {
     xfdf.addAnnotations.should.be.a.Function;
   });
 
-  it('#fromFile()', function() {
-    xfdf.fromFile.should.be.a.Function;
+  it('#fromJSON()', function() {
+    xfdf.fromJSON.should.be.a.Function;
+  });
+
+  it('#fromJSONFile()', function() {
+    xfdf.fromJSONFile.should.be.a.Function;
   });
 
   it('#validField()', function() {
@@ -52,6 +68,10 @@ describe('xfdf instantiation', function() {
 
   it('#generate()', function() {
     xfdf.generate.should.be.a.Function;
+  });
+
+  it('#generateToFile()', function() {
+    xfdf.generateToFile.should.be.a.Function;
   });
 
 });
@@ -122,7 +142,6 @@ describe('xfdf', function() {
   describe('#generate()', function() {
 
     var generation;
-    var data = [{name: 'fname', value: 'Scott'}, {name: 'lname', value: "O'Neal"}, { name: 'MALE', value: true }];
     beforeEach(function() {
       generation = xfdf.addFields(data).generate();
     });
@@ -153,7 +172,7 @@ describe('xfdf', function() {
 
           var val = data[i].value;
           if ( typeof val === 'boolean' ) { val = val ? 'Yes' : 'Off'; }
-          field[i].value[0].should.equal(val);
+          field[i].value[0].should.equal(val.toString());
         }
         //console.log(JSON.stringify(result, null, 2));
         //console.log(generation);
@@ -161,6 +180,81 @@ describe('xfdf', function() {
       });
     });
   });
-});
 
-// fromFile should return a promise, since its doing IO
+  describe('#generateToFile()', function() {
+
+    var generation;
+    beforeEach(function() {
+      generation = xfdf.addFields(data).generate();
+    });
+
+    it('should throw an error if no filename is provided', function() {
+      (function() {xfdf.generateToFile()}).should.throw(Error);
+    });
+
+    it('should write a file to path specified.', function() {
+      xfdf.generateToFile('test/tmp.xfdf', function(err) {
+        should(err).not.exist;
+        var contents = fs.readFileSync('test/tmp.xfdf', 'utf8');
+        contents.should.be.a.String;
+        fs.unlink('test/tmp.xfdf');
+
+      });
+    });
+
+  });
+
+  describe('#fromJSON', function() {
+
+    var jsonObj = {
+      fields: data
+    };
+
+    it('should throw an error if argument does not exist or is not an object.', function() {
+      (function() {xfdf.fromJSON()}).should.throw(Error);
+      (function() {xfdf.fromJSON('this should throw')}).should.throw(Error);
+    });
+
+    it('should die on an imporly formated json object', function() {
+      (function() {xfdf.fromJSON(data)}).should.throw(Error);
+    });
+
+    it('should accept a properly formatted javascript literal.', function() {
+      xfdf.fromJSON(jsonObj)._fields.should.have.length(7);
+    });
+  });
+
+  describe('#fromJSONFile', function() {
+
+    it('should throw an error if no path argument was provided', function() {
+      (function() {xfdf.fromJSONFile()}).should.throw(Error);
+    });
+
+    it('should throw an error if no callback argument was provided', function() {
+      (function() {xfdf.fromJSONFile('test/resources/test.json')}).should.throw(Error);
+    });
+
+    it('should throw an error if file cannot be opened for reading', function(done) {
+      xfdf.fromJSONFile('test/resources/doesntexist.json', function(err) {
+        err.should.be.an.Error;
+        done();
+      });
+    });
+
+    it('should throw an error if file is malformed JSON.', function(done) {
+      xfdf.fromJSONFile('test/resources/malformed.json', function(err) {
+        err.should.be.an.Error;
+        done();
+      });
+    });
+
+    it('should accept well formed json file', function(done) {
+      xfdf.fromJSONFile('test/resources/test.json', function(err) {
+        should(err).be.Null;
+        console.log(xfdf.generate());
+        done();
+      })
+    });
+
+  });
+});

@@ -1,4 +1,5 @@
-var builder = require('xmlbuilder');
+var builder = require('xmlbuilder'),
+    fs      = require('fs');
 
 module.exports = XFDF;
 
@@ -66,15 +67,70 @@ XFDF.prototype.addFields = function(fields) {
 };
 
 XFDF.prototype.addAnnotation = function(annotations) {
-
+  //TODO
 };
 
 // Semantic shorthand for addAnnotation w/ array
 XFDF.prototype.addAnnotations = function(annotations) {
-
+  //TODO
 };
 
-XFDF.prototype.fromFile = function() {
+XFDF.prototype.fromJSON = function(obj) {
+
+  if ( !obj || typeof obj !== 'object' ) {
+    throw new Error('Calling fromJSON(), but argument supplied is not an object.');
+  }
+
+  if ( !obj.fields || !(obj.fields instanceof Array) ) {
+    throw new Error('Calling fromJSON(), but object provided is malformed.');
+  }
+
+  // Loop over fields and add them to current object
+  for ( var i = 0; i < obj.fields.length; i++ ) {
+    this.addField(obj.fields[i]);
+  }
+
+  // TODO add annotations loop
+
+  return this;
+};
+
+XFDF.prototype.fromJSONFile = function(path, callback) {
+
+  var self = this;
+
+  if ( !path || typeof path !== 'string' ) {
+    throw new Error('Calling fromJSONFile(), but no file path argument provided.');
+  }
+
+  if ( !callback || typeof callback !== 'function' ) {
+    throw new Error('Calling fromJSONFile(), but no callback argument provided.');
+  }
+
+  fs.readFile(path, 'utf8', function(err, data) {
+
+    // Check if error during read
+    if ( err ) {
+      return callback(err);
+    }
+
+    // Lets try to JSON parse the file contents
+    var obj;
+
+    try {
+      obj = JSON.parse(data);
+    }
+    catch (error) {
+      // Erp! Die
+      return callback(error);
+    }
+
+    // Slurp went well, sent data object to #fromJSON()
+    self.fromJSON(obj);
+
+    return callback(null);
+
+  });
 
 };
 
@@ -88,7 +144,7 @@ XFDF.prototype.validField = function(field) {
 
 XFDF.prototype.generate = function() {
   if ( this._fields.length === 0 ) {
-    throw new Error('Calling generate() but not fields have been added.');
+    throw new Error('Calling generate() but no fields have been added.');
   }
 
   // Declare Root
@@ -128,5 +184,15 @@ XFDF.prototype.generate = function() {
   }
 
   return rootEle.end(this._opts.format);
+
+};
+
+XFDF.prototype.generateToFile = function(path, callback) {
+
+  // Generate and get xfdf string
+  var xfdfString = this.generate();
+
+  // Write file out
+  fs.writeFile(path, xfdfString, callback);
 
 };
