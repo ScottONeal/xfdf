@@ -1,6 +1,8 @@
 # XFDF
 A Node.js module for creating Adobe XFDF files.
 
+[![Build Status](https://travis-ci.org/ScottONeal/xfdf.svg?branch=master)](https://travis-ci.org/ScottONeal/xfdf)
+
 ```
 var xfdf = require('xfdf')
 
