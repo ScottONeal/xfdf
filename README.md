@@ -12,7 +12,7 @@ Always good to run tests
 npm test
 ```
 
-####Synoptic
+#### Synoptic
 ```
 var xfdf = require('xfdf')
 
@@ -97,7 +97,8 @@ Format of object should be:
 #### fromJSONFile('path', callback)
 
 Used to slurp a correctly formatted json file.
-**Usage:** *see test/resources/test.json for a properly formatted file.
+
+**Usage:** *see test/resources/test.json for a properly formatted file.*
 ```
   builder.fromJSONFile('/path/to/data.json', function(err) {
     if ( !err ) 
