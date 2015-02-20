@@ -12,12 +12,13 @@ Always good to run tests
 npm test
 ```
 
+####Synoptic
 ```
 var xfdf = require('xfdf')
 
 var builder = new xfdf({ pdf: 'Document.pdf' });
 
-builder.addField({ name: 'firstname', value: 'John'});
+builder.addField('firstname', 'John');
 
 console.log(builder.generate());
 ```
@@ -71,22 +72,12 @@ This module uses [xmlbuilder](https://github.com/oozcitak/xmlbuilder-js) to cons
 
 ## Methods
 
-#### addField({data})
+#### addField('fieldname', 'fieldvalue')
 
 Will add a field to xfdf document.
 Argument should be a hash with two keys: name, value;
 ```
-  builder.addField({ name: 'FieldName', value: 'FieldValue'});
-```
-
-#### addFields([data])
-
-This will accept an array of field objects to be added to the document.
-```
-  builder.addFields([
-    { name: 'first_name', value: 'John'},
-    { name: 'last_name' , value: 'Doe' },
-  ]);
+  builder.addField('FieldName', 'FieldValue');
 ```
 
 #### fromJSON({data})
@@ -95,16 +86,18 @@ You can use this method to pass an entire javascript literal to be consumed by t
 Format of object should be:
 ```
   {
-    fields: [
-      {name: 'FieldName', value: 'FieldValue'}
-    ]
+    fields: {
+      age: 32,
+      tall: true,
+      name: 'John Doe'
+    }
   }
 ```
 
 #### fromJSONFile('path', callback)
 
 Used to slurp a correctly formatted json file.
-*Usage:*
+**Usage:** *see test/resources/test.json for a properly formatted file.
 ```
   builder.fromJSONFile('/path/to/data.json', function(err) {
     if ( !err ) 
