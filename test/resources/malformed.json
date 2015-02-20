@@ -1,19 +1,5 @@
 {
-  fields: [
-    {
-      name: "First_Name",
-      value: "John"
-    },
-    {
-      name: "Last_Name",
-      value: "Doe"
-    },
-    {
-      name: "MALE",
-      value: true
-    },
-    {
-      name: "telephone",
-      value: 1112223333
-    }
+  "fields": {
+    "First_Name": 
+  }
 }

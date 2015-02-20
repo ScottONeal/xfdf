@@ -1,18 +1,23 @@
 var should = require('should'),
     XFDF   = require('../index.js'),
     xml2js = require('xml2js'),
+    _      = require('lodash'),
     fs     = require('fs');
 
-// Test data
-var data = [
-  { name: 'First_Name', value: 'John'},
-  { name: 'Last_Name' , value: "Doe"},
-  { name: 'MALE'      , value: true },
-  { name: 'Address_1' , value: '123 Work Street' },
-  { name: 'City'      , value: 'Annapolis' },
-  { name: 'STATE'     , value: 'MD' },
-  { name: 'ZIP'       , value: 27233 }
-];
+// test data
+var data = {
+  fields: {
+    'First_Name': 'John',
+    'Last_Name' : 'Doe',
+    'MALE'      : true,
+    'Address_1' : '123 Work Street',
+    'City'      : 'Annapolis',
+    'STATE'     : 'MD',
+    'ZIP'       : 27233,
+    'Checkgroup': [true, false, true],
+    'Array'     : ['One', 'Bull', 'Landon']
+  }
+}
 
 describe('xfdf instantiation', function() {
   var xfdf = new XFDF();
@@ -40,10 +45,6 @@ describe('xfdf instantiation', function() {
 
   it('#addField()', function() {
     xfdf.addField.should.be.a.Function;
-  });
-
-  it('#addFields()', function() {
-    xfdf.addFields.should.be.a.Function;
   });
 
   it('#addAnnotation()', function() {
@@ -91,44 +92,32 @@ describe('xfdf', function() {
     });
 
     it('should throw an error if invalid field argument', function() {
-      (function() {xfdf.addField({nme: 'Bad Key', value: 'Good Key'})}).should.throw(Error);
+      (function() {xfdf.addField({}, 'Bad Key')}).should.throw(Error);
+    });
+
+    it('should throw an error if no value argument', function() {
+      (function() {xfdf.addField('field')}).should.throw(Error);
     });
 
     it('should add field to _fields array', function() {
-      xfdf.addField({name: 'name', value: 'John'});
+      xfdf.addField('name', 'John');
       xfdf._fields.should.have.length(1);
     });
 
-    it('should forward to #addFields() if argument is an array.', function() {
-      xfdf.addField([{name: 'name', value: 'John'}, {name: 'lname', value: 'Doe'}]);
-      xfdf._fields.should.have.length(2);
-    });
-
-  });
-
-  describe('#addFields()', function() {
-
-    it('should throw an error if no fields argument supplied', function() {
-      (function() {xfdf.addFields()}).should.throw(Error);
-    });
-
-    it('should throw an error if fields argument is not an instance of Array', function() {
-      (function() {xfdf.addFields('test')}).should.throw(Error);
-    });
-
-    it('should add multiple fields to _fields array', function() {
-      xfdf.addFields([{name: 'name', value: 'John'}, {name: 'lname', value: 'Doe'}]);
-      xfdf._fields.should.have.length(2);
+    it('should add multiple fields to _fields array if value is an array', function() {
+      xfdf.addField('colors', ['red', 'blue', 'yellow']);
+      xfdf._fields.should.have.length(3);
     });
 
   });
 
   describe('#validField()', function() {
-    it('should return false if not a valid field type', function() {
-      xfdf.validField('invalid').should.not.be.ok;
+    it('should return false if field name is not a string', function() {
+      xfdf.validField({}, 'value').should.not.be.ok;
     });
+
     it('should return true if field passed has name and value keys', function() {
-      xfdf.validField({name: 'test', value: 'true'}).should.be.ok;
+      xfdf.validField('test', true).should.be.ok;
     });
   });
 
@@ -143,7 +132,7 @@ describe('xfdf', function() {
 
     var generation;
     beforeEach(function() {
-      generation = xfdf.addFields(data).generate();
+      generation = xfdf.fromJSON(data).generate();
     });
 
     it('should successfully return a parsable xml object', function(done) {
@@ -155,37 +144,13 @@ describe('xfdf', function() {
       });
     });
 
-    it('should successfully generate a proper xfdf structured document', function(done) {
-      var parsed = xml2js.parseString(generation, function(err, result) {
-        should(err).not.exist;
-        result.xfdf.should.have.keys(['$', 'fields']);
-        result.xfdf.fields.should.be.an.Array;
-
-        result.xfdf.fields[0].should.have.key('field');
-        result.xfdf.fields[0].field.should.be.an.Array;
-        var field = result.xfdf.fields[0].field;
-
-        //Loop through different fields
-        for ( var i = 0; i < field.length; i++ ) {
-          field[i].should.have.keys(['$','value']);
-          field[i].$.should.have.key('name');
-
-          var val = data[i].value;
-          if ( typeof val === 'boolean' ) { val = val ? 'Yes' : 'Off'; }
-          field[i].value[0].should.equal(val.toString());
-        }
-        //console.log(JSON.stringify(result, null, 2));
-        //console.log(generation);
-        done();
-      });
-    });
   });
 
   describe('#generateToFile()', function() {
 
     var generation;
     beforeEach(function() {
-      generation = xfdf.addFields(data).generate();
+      generation = xfdf.fromJSON(data).generate();
     });
 
     it('should throw an error if no filename is provided', function() {
@@ -206,21 +171,17 @@ describe('xfdf', function() {
 
   describe('#fromJSON', function() {
 
-    var jsonObj = {
-      fields: data
-    };
-
     it('should throw an error if argument does not exist or is not an object.', function() {
       (function() {xfdf.fromJSON()}).should.throw(Error);
       (function() {xfdf.fromJSON('this should throw')}).should.throw(Error);
     });
 
     it('should die on an imporly formated json object', function() {
-      (function() {xfdf.fromJSON(data)}).should.throw(Error);
+      (function() {xfdf.fromJSON({ badKeys: data})}).should.throw(Error);
     });
 
     it('should accept a properly formatted javascript literal.', function() {
-      xfdf.fromJSON(jsonObj)._fields.should.have.length(7);
+      xfdf.fromJSON(data)._fields.should.have.length(13);
     });
   });
 
@@ -250,8 +211,8 @@ describe('xfdf', function() {
 
     it('should accept well formed json file', function(done) {
       xfdf.fromJSONFile('test/resources/test.json', function(err) {
-        should(err).be.Null;
         console.log(xfdf.generate());
+        should(err).be.Null;
         done();
       })
     });

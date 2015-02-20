@@ -1,20 +1,13 @@
 {
-  "fields": [
-    {
-      "name": "First_Name",
-      "value": "John"
-    },
-    {
-      "name": "Last_Name",
-      "value": "Doe"
-    },
-    {
-      "name": "MALE",
-      "value": true
-    },
-    {
-      "name": "telephone",
-      "value": 1112223333
-    }
-  ]
+  "fields": {
+    "First_Name": "John",
+    "Last_Name" : "Doe",
+    "MALE"      : true,
+    "Address_1" : "123 Work Street",
+    "City"      : "Annapolis",
+    "STATE"     : "MD",
+    "ZIP"       : 27233,
+    "Checkgroup": [true, false, true],
+    "Array"     : ["One", "Bull", "Landon"]
+  }
 }
