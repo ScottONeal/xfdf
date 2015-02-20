@@ -1,5 +1,6 @@
 var builder = require('xmlbuilder'),
-    fs      = require('fs');
+    fs      = require('fs'),
+    _       = require('lodash');
 
 module.exports = XFDF;
 
@@ -19,47 +20,34 @@ function XFDF(opts) {
   return self;
 }
 
-XFDF.prototype.addField = function(field) {
+XFDF.prototype.addField = function(field, value) {
 
   // Throw error if no field provided
   if ( !field ) {
     throw new Error('addField() called, but no field argument was supplied');
   }
 
-  // If field is actually an array, then send it to addFields()
-  if ( field instanceof Array ) {
-    return this.addFields(field);
+  // Check if value Exists
+  if ( !value ) {
+    throw new Error('addField() called, but no value argument supplied');
   }
 
   // Check if current field is invalid, if it is, throw an error
-  if ( !this.validField(field) ) {
+  if ( !this.validField(field, value) ) {
     throw new Error('Trying to add a field, but field is invalid: ' + JSON.stringify(field, null, 2));
   }
 
   // Everything looks good, push field onto fields array
-  this._fields.push(field);
 
-  return this;
-
-};
-
-// Semantic shorthand for addField w/ array
-XFDF.prototype.addFields = function(fields) {
-
-  // Throw error if no fields provided
-  if ( !fields ) {
-    throw new Error('addFields() called, but no fields argument was supplied');
+  // Check if value is an array that needs to be pushed
+  if ( value instanceof Array ) {
+    for ( var i = 0; i < value.length; i++ ) {
+      this._fields.push({ name: field, value: value[i] });
+    }
   }
-
-  // If fields argument is not an array, throw an error
-  if ( !(fields instanceof Array) ) {
-    throw new Error('addFields() called with an argument, but type was not an array');
-  }
-
-  // Loop through fields
-  for ( var i = 0; i < fields.length; i++ )  {
-    // Send current field to addFields()
-    this.addField(fields[i]);
+  // Push single value
+  else {
+    this._fields.push({ name: field, value: value});
   }
 
   return this;
@@ -77,18 +65,20 @@ XFDF.prototype.addAnnotations = function(annotations) {
 
 XFDF.prototype.fromJSON = function(obj) {
 
+  var self = this;
+
   if ( !obj || typeof obj !== 'object' ) {
     throw new Error('Calling fromJSON(), but argument supplied is not an object.');
   }
 
-  if ( !obj.fields || !(obj.fields instanceof Array) ) {
-    throw new Error('Calling fromJSON(), but object provided is malformed.');
+  if ( !obj.fields ) {
+    throw new Error('Calling fromJSON(), but object provided does not have "field" key.');
   }
 
   // Loop over fields and add them to current object
-  for ( var i = 0; i < obj.fields.length; i++ ) {
-    this.addField(obj.fields[i]);
-  }
+  _.forEach(obj.fields, function(value, field) {
+    self.addField(field, value);
+  });
 
   // TODO add annotations loop
 
@@ -136,14 +126,19 @@ XFDF.prototype.fromJSONFile = function(path, callback) {
 
 // This method is used to validate a field object, it only tests to make sure name and values
 //  exists as keys
-XFDF.prototype.validField = function(field) {
-  if ( !(field instanceof Object) ) return false;
+XFDF.prototype.validField = function(field, value) {
 
-  return  field.name && field.value ? true : false;
+  if ( !field || !value ) return false;
+
+  if ( typeof field !== 'string' ) return false;
+
+  return true;
 };
 
 XFDF.prototype.generate = function() {
-  if ( this._fields.length === 0 ) {
+  var self = this;
+
+  if ( self._fields.length === 0 ) {
     throw new Error('Calling generate() but no fields have been added.');
   }
 
@@ -156,7 +151,7 @@ XFDF.prototype.generate = function() {
   rootEle.att({'xml:space': 'preserve' });
 
   // Create f element, if a pdf was supplied
-  if ( this._opts.pdf ) {
+  if ( self._opts.pdf ) {
     rootEle.ele('f', { href: this._opts.pdf });
   }
 
@@ -164,26 +159,25 @@ XFDF.prototype.generate = function() {
   var fieldsEle = rootEle.ele('fields');
 
   // Iterate through fields and write each one out
-  for ( var i = 0; i<this._fields.length; i++ ) {
-    var currentField = this._fields[i];
+  _.forEach(self._fields, function(field) {
+    var name  = field.name,
+        value = field.value;
 
     // Create field element with attribute of name
-    var currentFieldEle = fieldsEle.ele('field', { name: currentField.name });
-
-    var val = currentField.value;
+    var currentFieldEle = fieldsEle.ele('field', { name: name });
 
     // translateBool if set
-    if ( this._opts.translateBools && typeof val === 'boolean' ) {
+    if ( self._opts.translateBools && typeof value === 'boolean' ) {
 
       // XFDF Translates a true to 'Yes' and a false to 'Off' for checkboxes and radios
-      val = val ? 'Yes' : 'Off';
+      value = value ? 'Yes' : 'Off';
     }
 
     // Create value element inside of field element
-    currentFieldEle.ele('value', {}, val);
-  }
+    currentFieldEle.ele('value', {}, value);
+  });
 
-  return rootEle.end(this._opts.format);
+  return rootEle.end(self._opts.format);
 
 };
 
