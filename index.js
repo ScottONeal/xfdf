@@ -28,7 +28,7 @@ XFDF.prototype.addField = function(field, value) {
   }
 
   // Check if value Exists
-  if ( !value ) {
+  if ( !value && typeof value !== 'boolean' ) {
     throw new Error('addField() called, but no value argument supplied');
   }
 
@@ -128,7 +128,7 @@ XFDF.prototype.fromJSONFile = function(path, callback) {
 //  exists as keys
 XFDF.prototype.validField = function(field, value) {
 
-  if ( !field || !value ) return false;
+  if ( !field || ( !value && typeof value !== 'boolean') ) return false;
 
   if ( typeof field !== 'string' ) return false;
 

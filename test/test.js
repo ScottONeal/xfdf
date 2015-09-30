@@ -99,6 +99,10 @@ describe('xfdf', function() {
       (function() {xfdf.addField('field')}).should.throw(Error);
     });
 
+    it('should not throw an error if value is a falsy boolean', function() {
+      xfdf.addField('field', false);
+    });
+
     it('should add field to _fields array', function() {
       xfdf.addField('name', 'John');
       xfdf._fields.should.have.length(1);
@@ -211,7 +215,6 @@ describe('xfdf', function() {
 
     it('should accept well formed json file', function(done) {
       xfdf.fromJSONFile('test/resources/test.json', function(err) {
-        console.log(xfdf.generate());
         should(err).be.Null;
         done();
       })
