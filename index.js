@@ -22,16 +22,6 @@ function XFDF(opts) {
 
 XFDF.prototype.addField = function(field, value) {
 
-  // Throw error if no field provided
-  if ( !field ) {
-    throw new Error('addField() called, but no field argument was supplied');
-  }
-
-  // Check if value Exists
-  if ( !value && typeof value !== 'boolean' ) {
-    throw new Error('addField() called, but no value argument supplied');
-  }
-
   // Check if current field is invalid, if it is, throw an error
   if ( !this.validField(field, value) ) {
     throw new Error('Trying to add a field, but field is invalid: ' + JSON.stringify(field, null, 2));
@@ -128,7 +118,7 @@ XFDF.prototype.fromJSONFile = function(path, callback) {
 //  exists as keys
 XFDF.prototype.validField = function(field, value) {
 
-  if ( !field || ( !value && typeof value !== 'boolean') ) return false;
+  if ( !field || (!(_.isString(value) || _.isBoolean(value)) && !value )) return false
 
   if ( typeof field !== 'string' ) return false;
 

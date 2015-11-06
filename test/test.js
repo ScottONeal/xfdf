@@ -15,7 +15,8 @@ var data = {
     'STATE'     : 'MD',
     'ZIP'       : 27233,
     'Checkgroup': [true, false, true],
-    'Array'     : ['One', 'Bull', 'Landon']
+    'Array'     : ['One', 'Bull', 'Landon'],
+    'EmptyStr'  : ''
   }
 }
 
@@ -97,6 +98,10 @@ describe('xfdf', function() {
 
     it('should throw an error if no value argument', function() {
       (function() {xfdf.addField('field')}).should.throw(Error);
+    });
+
+    it('should not throw an error if value is an empty string', function() {
+      (function() {xfdf.addField('field', '')}).should.not.throw(Error);
     });
 
     it('should not throw an error if value is a falsy boolean', function() {
@@ -185,7 +190,7 @@ describe('xfdf', function() {
     });
 
     it('should accept a properly formatted javascript literal.', function() {
-      xfdf.fromJSON(data)._fields.should.have.length(13);
+      xfdf.fromJSON(data)._fields.should.have.length(14);
     });
   });
 
