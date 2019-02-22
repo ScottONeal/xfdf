@@ -31,7 +31,7 @@ describe('xfdf instantiation', function() {
     xfdf._opts.format.pretty.should.be.ok;
     xfdf._opts.format.indent.should.equal('  ');
     xfdf._opts.format.newline.should.equal('\n');
-    should(xfdf._opts.pdf).not.exist;
+    should.not.exist(xfdf._opts.pdf);
     xfdf._opts.translateBools.should.be.ok;
   });
 
@@ -146,7 +146,7 @@ describe('xfdf', function() {
 
     it('should successfully return a parsable xml object', function(done) {
       var parsed = xml2js.parseString(generation, function(err, result) {
-        should(err).not.exist;
+        should.not.exist(err);
         result.xfdf.should.have.keys(['$', 'fields']);
 
         done();
@@ -168,11 +168,10 @@ describe('xfdf', function() {
 
     it('should write a file to path specified.', function() {
       xfdf.generateToFile('test/tmp.xfdf', function(err) {
-        should(err).not.exist;
+        should.not.exist(err);
         var contents = fs.readFileSync('test/tmp.xfdf', 'utf8');
         contents.should.be.a.String;
-        fs.unlink('test/tmp.xfdf');
-
+        fs.unlinkSync('test/tmp.xfdf');
       });
     });
 

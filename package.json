@@ -23,12 +23,12 @@
   },
   "homepage": "https://github.com/ScottONeal/xfdf",
   "devDependencies": {
-    "mocha": "^2.1.0",
+    "mocha": "^6.0.1",
     "should": "^5.0.0",
     "xml2js": "^0.4.5"
   },
   "dependencies": {
-    "lodash": "^3.2.0",
-    "xmlbuilder": "^2.5.1"
+    "lodash": "^4.17.11",
+    "xmlbuilder": "^11.0.0"
   }
 }
